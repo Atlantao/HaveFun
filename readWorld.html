@@ -1,0 +1,205 @@
+<html>
+<head>
+<title>语音朗读</title>
+<script src="./jquery-3.1.0.min.js"></script>
+</head>
+<style>
+	.add,.accent{
+		position: fixed;
+		top: 10px;
+	}
+	.add{
+		right: 20px;
+	}
+	.accent{
+		right: 150px;
+	}
+	.accent span{
+		font-size: 18px;
+		font-weight: bolder;
+	}
+	button,select{
+		width: 40px;
+		height: 35px;
+		border-radius: 0px;
+		border: 0px;
+		outline: none;
+		background-color: #f7f7f7;
+	}
+	select{
+		width: 50px;
+		font-size: 18px;
+		font-weight: bold;
+		padding-left: 6px;
+		background-color: transparent;
+	}
+	.add button{
+		font-size: 30px;
+	}
+	.add button:hover,.read button:hover{
+		background-color: #efefef;
+	}
+	.add button:active,.read button:active{
+		background-color: #c1c1c1;
+	}
+	.read input{
+		width: 230px;
+		height: 35px;
+		border-top: 0px;
+		border-left: 0px;
+		border-right: 0px;
+		outline: none;
+		font-size: 18px;
+	}
+	.read {
+		margin-left: 20px;
+		display: inline-block;
+		margin-top: 20px;
+		width: 330px;
+	}
+	.read button:nth-child(3){
+		display: none;
+	}
+	.playAudio{
+		dislpay: none;
+	}
+</style>
+<body>
+	<h3>输入需要朗读的单词</h3>
+	<div class="accent">
+		<span>口音:</span>
+		<select name="type">
+			<option value="2">美</option>
+			<option value="1">英</option>
+		</select>
+	</div>
+	<div class="add">
+		<button class="ab">+</button>
+	</div>
+	<div class="main">
+	</div>
+	<div class="playAudio">
+		<audio></audio>
+	</div>
+<script>
+	$(function(){
+		var url = "http://dict.youdao.com/dictvoice?audio=";
+		var arr;
+		var list = localStorage.getItem("list");
+		if(list!=null && list!=""){
+			arr = list.split(",");
+			// 遍历数据添加
+			for(var i=1;i<=arr.length;i++){
+				if(arr[i-1]==""){
+					continue;
+				}
+				if(i==1){
+					$(".read:eq(0)>input").val(arr[i-1]);
+				}else{
+					addSpan(i,arr[i-1]);
+				}
+			}
+		}else{
+			arr = [];
+			addSpan(1,"");
+		}
+		// 删除按钮出现消失
+		$(".read").mouseover(function(){
+			delButtonOver(this)
+		}).mouseout(function(){
+			delButtonOut(this);
+		})
+		
+		// 添加按钮
+		$(".add").click(function(){
+			// 获取数组长度
+			let leg = $(".main span").length + 1;
+			addSpan(leg,"");
+		})
+		
+		// 朗读按钮
+		$(".read>button:eq(0)").click(function(){
+			readText(this);
+		})
+		// 删除按钮
+		$(".read>button:eq(1)").click(function(){
+			delSelf(this);
+		})
+	
+	
+	
+	
+	
+		
+		function delButtonOver(t){
+			$(t).find("button:eq(1)").css("display","inherit");
+		}
+		function delButtonOut(t){
+			$(t).find("button:eq(1)").css("display","none");
+		}
+		// 添加元素
+		function addSpan(v,val){
+			let sp = '<span class="read" v="'+v+'">\
+				<input v="'+v+'" type="text" value="'+val+'" />\
+				<button v="'+v+'">🔈</button>\
+				<button v="'+v+'">❌</button>\
+				</span>';
+			// 添加至页面
+			$(".main").append(sp);
+			// 事件
+			$(".read[v="+v+"]").mouseover(function(){
+				delButtonOver(this)
+			}).mouseout(function(){
+				delButtonOut(this);
+			}).find("button:eq(0)").click(function(){
+				readText(this);
+			})
+			$(".read[v="+v+"]>button:eq(1)").click(function(){
+				delSelf(this);
+			})
+			
+		}
+		// 朗读
+		function readText(t){
+			let i = $(t).attr("v");
+			// 获取要朗读的内容
+			let text = $(".read>input[v="+i+"]").val();
+			// 判断是否为空
+			if(isNull(text)){
+				return;
+			}
+			// 添加至本地存储
+			if($.inArray(text, arr)==-1){
+				arr[arr.length] = text;
+				let arrs = arr.join(",");
+				localStorage.setItem("list",arrs);
+			}
+			// 朗读
+			let type = $("select[name=type]").val();
+			let u = url + text + "&type=" + type;
+			$("audio").attr("src",u);
+			$("audio")[0].load();
+			$("audio")[0].play();
+		}
+		// 删除
+		function delSelf(t){
+			let i = $(t).attr("v");
+			$(".read[v="+i+"]").remove();
+			// 从存储中移出
+			arr.splice(i-1,1);
+			let arrs = arr.join(",");
+			localStorage.setItem("list",arrs);
+		}
+		// 判断是否为空
+		function isNull( str ){
+			if ( str == "" ) return true;
+			var regu = "^[ ]+$";
+			var re = new RegExp(regu);
+			return re.test(str);
+		}
+		
+	})
+</script>
+
+</body>
+</html>
